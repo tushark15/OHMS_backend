@@ -4,11 +4,12 @@ const cors = require("cors");
 const schoolRoutes = require("./routes/school-routes")
 const staffRoutes = require("./routes/staff-routes")
 const studentRoutes = require("./routes/student-routes")
+const path = require("path");
 
 const app = express();
 
 mongoose.connect(
-  "mongodb+srv://tusharkhandelwal1512:Tushar123@cluster.ix4viru.mongodb.net/",
+  `mongodb+srv://${procees.env.MERN_USERNAME}:${procees.env.MERN_PASSWORD}@cluster.ix4viru.mongodb.net/`,
   {
     useNewUrlParser: true,
     useUnifiedTopology: true,
