@@ -11,7 +11,7 @@ const staffSchema = new Schema({
   staffName: { type: String, required: true },
   staffEmail: { type: String, required: true, unique: true },
   staffPassword: { type: String, required: true },
-  schoolId: { type: String, required: true },
+  schoolId: { type: Number, required: true },
   staffClasses: [staffClassSchema],
   staffSubjects: {
     type: Map,

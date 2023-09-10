@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
@@ -6,9 +7,8 @@ const staffRoutes = require("./routes/staff-routes")
 const studentRoutes = require("./routes/student-routes")
 
 const app = express();
-console.log(process.env.MERN_USERNAME)
 mongoose.connect(
-  `mongodb+srv://${process.env.MERN_USERNAME}:${process.env.MERN_PASSWORD}@cluster.ix4viru.mongodb.net/`,
+  `mongodb+srv://${process.env.MONGO_USERNAME}:${process.env.MONGO_PASSWORD}@cluster.ix4viru.mongodb.net/`,
   {
     useNewUrlParser: true,
     useUnifiedTopology: true,
@@ -37,6 +37,6 @@ app.use((error, req, res, next) => {
 });
 
 
-app.listen(3000, () => {
-  console.log("Example app listening on port 3000!");
+app.listen(process.env.API_PORT, () => {
+  console.log(`Example app listening on port ${process.env.API_PORT}!`);
 });

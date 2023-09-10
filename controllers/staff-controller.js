@@ -162,7 +162,8 @@ const login = async (req, res, next) => {
   }
 
   res.json({
-    isAdmin: exisitingStaff.isAdmin,
+    schoolId: exisitingStaff.schoolId,
+    isAdmin: exisitingStaff.isAdmin
   });
 };
 
