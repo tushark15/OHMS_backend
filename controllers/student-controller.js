@@ -18,6 +18,7 @@ const addStudent = async (req, res, next) => {
     studentDOB,
     studentClass,
     schoolId,
+    studentPassword,
   } = req.body;
 
   let existingStudent;
@@ -43,6 +44,7 @@ const addStudent = async (req, res, next) => {
     studentDOB,
     studentClass,
     schoolId,
+    studentPassword,
   });
 
   try {
@@ -60,7 +62,10 @@ const getStudentsBySchoolId = async (req, res, next) => {
   const studentClass = req.params.studentClass;
   let students;
   try {
-    students = await Student.find({ schoolId: schoolId, studentClass: studentClass});
+    students = await Student.find({
+      schoolId: schoolId,
+      studentClass: studentClass,
+    });
   } catch (err) {
     const error = new HttpError("Couldn't find Students (Wrong School)");
     return next(error);
@@ -68,5 +73,101 @@ const getStudentsBySchoolId = async (req, res, next) => {
   res.json(students);
 };
 
+const login = async (req, res, next) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return next(
+      new HttpError("Invalid inputs passed, please check your data.")
+    );
+  }
+  const { studentId, studentPassword } = req.body;
+  let exisitingStudent;
+
+  try {
+    exisitingStudent = await Student.findOne({ studentId: studentId });
+  } catch (err) {
+    const error = new HttpError("Logging in failed, please try again.");
+    return next(error);
+  }
+
+  if (!exisitingStudent) {
+    const error = new HttpError("Invalid Credentials, could not log you in");
+    return next(error);
+  }
+
+  let isValidPassword = false;
+  try {
+    isValidPassword = studentPassword === exisitingStudent.studentPassword;
+  } catch (err) {
+    const error = new HttpError("logging in failed, please try again.");
+    return next(error);
+  }
+
+  if (!isValidPassword) {
+    const error = new HttpError("Invalid credentials, could not log you in!");
+    return next(error);
+  }
+
+  res.json({
+    schoolId: exisitingStudent.schoolId,
+    studentId: exisitingStudent.studentId,
+    studentClass: exisitingStudent.studentClass,
+  });
+};
+
+const deleteStudent = async (req, res, next) => {
+  const studentId = req.params.studentId;
+  let student;
+  try {
+    student = await Student.findById(studentId);
+  } catch (err) {
+    const error = new HttpError("Couldn't find student, please try again.");
+    return next(error);
+  }
+
+  if (!student) {
+    const error = new HttpError("student does not exist", 404);
+    return next(error);
+  }
+
+  try {
+    await student.deleteOne();
+  } catch (err) {
+    const error = new HttpError(
+      "Something went wrong, could not delete student.",
+      500
+    );
+    return next(error);
+  }
+
+  res.status(200).json({ message: "Student Deleted." });
+};
+
+const getStudentById = async (req, res, next) => {
+  const studentId = req.params.studentId;
+  let student;
+  try{
+    student = await Student.findOne({studentId: studentId})
+  }catch(err){
+    const error = new HttpError("Something went wrong, could not find the student", 500);
+    return next(error);
+  }
+
+  if(!student){
+    const error = new HttpError(
+      "Could not find the student with provided id.",
+      404
+    );
+    return next(error);
+  }
+  res.json({
+    studentClass: student.studentClass,
+    schoolId: student.schoolId
+  })
+}
+
 exports.addStudent = addStudent;
 exports.getStudentsBySchoolId = getStudentsBySchoolId;
+exports.login = login;
+exports.deleteStudent = deleteStudent;
+exports.getStudentById = getStudentById;

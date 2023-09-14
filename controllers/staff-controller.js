@@ -41,7 +41,7 @@ const signup = async (req, res, next) => {
     staffSubjects,
     schoolId,
     isAdmin,
-  } = req.body;
+  } = req.body ;
 
   let existingStaffAdmin;
   try {
@@ -74,7 +74,12 @@ const signup = async (req, res, next) => {
     return next(error);
   }
 
-  res.status(201).json(createdStaffAdmin.isAdmin);
+  res.json({
+    schoolId: createdStaffAdmin.schoolId,
+    isAdmin: createdStaffAdmin.isAdmin,
+    staffClasses: createdStaffAdmin.staffClasses,
+    staffSubjects: createdStaffAdmin.staffSubjects
+  });
 };
 
 const addStaff = async (req, res, next) => {
@@ -135,7 +140,6 @@ const login = async (req, res, next) => {
   }
   const { staffEmail, staffPassword } = req.body;
   let exisitingStaff;
-
   try {
     exisitingStaff = await Staff.findOne({ staffEmail: staffEmail });
   } catch (err) {
@@ -163,7 +167,9 @@ const login = async (req, res, next) => {
 
   res.json({
     schoolId: exisitingStaff.schoolId,
-    isAdmin: exisitingStaff.isAdmin
+    isAdmin: exisitingStaff.isAdmin,
+    staffClasses: exisitingStaff.staffClasses,
+    staffSubjects: exisitingStaff.staffSubjects
   });
 };
 

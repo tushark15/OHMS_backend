@@ -10,7 +10,8 @@ const studentSchema=  new Schema({
     studentId: {type: Number, required: true, unique: true},
     studentDOB : {type: Date, required: true},
     studentClass: {type: String, required: true},
-    schoolId: {type: Number, required: true}
+    schoolId: {type: Number, required: true},
+    studentPassword: {type: String, required: true}
 })
 
 studentSchema.plugin(uniqueValidator);

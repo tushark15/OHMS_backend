@@ -7,9 +7,9 @@ router.get("/", staffController.getStaff);
 
 router.post("/signup", staffController.signup)
 router.post("/addStaff", staffController.addStaff)
+router.post("/login", staffController.login)
 router.get("/:schoolId", staffController.getStaffBySchoolId);
 router.delete("/:staffId", staffController.deleteStaff)
 
-router.post("/login", staffController.login)
 
 module.exports = router;
