@@ -1,11 +1,12 @@
 const Staff = require("../models/staff");
 const { validationResult } = require("express-validator");
 const HttpError = require("../models/http-error");
+const School = require("../models/school");
 
 const getStaff = async (req, res, next) => {
   let staffs;
   try {
-    staffs = await Staff.find();
+    staffs = await Staff.find({}).populate('school');
   } catch (err) {
     const error = new HttpError("Couldn't find staff");
     return next(error);
@@ -17,13 +18,12 @@ const getStaffBySchoolId = async (req, res, next) => {
   const schoolId = req.params.schoolId;
   let staffs;
   try {
-    staffs = await Staff.find({ schoolId: schoolId });
+    staffs = await Staff.find({ schoolId }).populate('school');
   } catch (err) {
     const error = new HttpError("Couldn't find staff (Wrong School)");
     return next(error);
   }
   res.json(staffs);
-
 };
 
 const signup = async (req, res, next) => {
@@ -41,7 +41,7 @@ const signup = async (req, res, next) => {
     staffSubjects,
     schoolId,
     isAdmin,
-  } = req.body ;
+  } = req.body;
 
   let existingStaffAdmin;
   try {
@@ -57,6 +57,20 @@ const signup = async (req, res, next) => {
     return next(err);
   }
 
+  let schoolObjectId;
+
+  try {
+    const school = await School.findOne({ schoolId: schoolId });
+    if (!school) {
+      // Handle the case where the corresponding school is not found
+      // You can return an error response or handle it as needed
+    }
+    schoolObjectId = school._id; // Obtain the ObjectId of the school
+  } catch (err) {
+    const error = new HttpError("Error finding school.", 500);
+    return next(error);
+  }
+
   const createdStaffAdmin = new Staff({
     staffName: staffName,
     staffEmail: staffEmail,
@@ -65,6 +79,7 @@ const signup = async (req, res, next) => {
     staffSubjects: staffSubjects,
     schoolId: schoolId,
     isAdmin: isAdmin,
+    school: schoolObjectId,
   });
 
   try {
@@ -74,13 +89,8 @@ const signup = async (req, res, next) => {
     return next(error);
   }
 
-  res.json({
-    schoolId: createdStaffAdmin.schoolId,
-    isAdmin: createdStaffAdmin.isAdmin,
-    staffClasses: createdStaffAdmin.staffClasses,
-    staffSubjects: createdStaffAdmin.staffSubjects
-  });
-};
+  res.json(createdStaffAdmin);
+}
 
 const addStaff = async (req, res, next) => {
   const errors = validationResult(req);
@@ -111,6 +121,20 @@ const addStaff = async (req, res, next) => {
     return next(err);
   }
 
+  let schoolObjectId;
+
+  try {
+    const school = await School.findOne({ schoolId: schoolId });
+    if (!school) {
+      // Handle the case where the corresponding school is not found
+      // You can return an error response or handle it as needed
+    }
+    schoolObjectId = school._id; // Obtain the ObjectId of the school
+  } catch (err) {
+    const error = new HttpError("Error finding school.", 500);
+    return next(error);
+  }
+
   const createdStaff = new Staff({
     staffName: staffName,
     staffEmail: staffEmail,
@@ -119,6 +143,8 @@ const addStaff = async (req, res, next) => {
     staffSubjects: staffSubjects,
     schoolId: schoolId,
     isAdmin: isAdmin,
+    school: schoolObjectId,
+
   });
 
   try {
@@ -165,12 +191,7 @@ const login = async (req, res, next) => {
     return next(error);
   }
 
-  res.json({
-    schoolId: exisitingStaff.schoolId,
-    isAdmin: exisitingStaff.isAdmin,
-    staffClasses: exisitingStaff.staffClasses,
-    staffSubjects: exisitingStaff.staffSubjects
-  });
+  res.json(exisitingStaff);
 };
 
 const deleteStaff = async (req, res, next) => {

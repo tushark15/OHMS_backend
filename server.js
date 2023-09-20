@@ -5,6 +5,7 @@ const cors = require("cors");
 const schoolRoutes = require("./routes/school-routes")
 const staffRoutes = require("./routes/staff-routes")
 const studentRoutes = require("./routes/student-routes")
+const homeworkRoutes = require("./routes/homework-routes")
 
 const app = express();
 mongoose.connect(
@@ -25,6 +26,8 @@ app.use(express.json());
 app.use("/api/school", schoolRoutes)
 app.use("/api/staff", staffRoutes)
 app.use("/api/student", studentRoutes)
+app.use("/api/homework", homeworkRoutes)
+
 
 app.use((error, req, res, next) => {
   // if response has been sent

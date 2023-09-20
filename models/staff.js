@@ -12,6 +12,7 @@ const staffSchema = new Schema({
   staffEmail: { type: String, required: true, unique: true },
   staffPassword: { type: String, required: true },
   schoolId: { type: Number, required: true },
+  school: { type: Schema.Types.ObjectId, ref: 'School', required: true },
   staffClasses: [staffClassSchema],
   staffSubjects: {
     type: Map,
@@ -28,9 +29,8 @@ const staffSchema = new Schema({
       },
     ],
   },
-  isAdmin: { type: Boolean, required: true},
+  isAdmin: { type: Boolean, required: true },
 });
-
 
 staffSchema.plugin(uniqueValidator);
 

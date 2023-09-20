@@ -1,6 +1,7 @@
 const Student = require("../models/student");
 const { validationResult } = require("express-validator");
 const HttpError = require("../models/http-error");
+const School = require("../models/school");
 
 const addStudent = async (req, res, next) => {
   const errors = validationResult(req);
@@ -35,6 +36,20 @@ const addStudent = async (req, res, next) => {
     return next(err);
   }
 
+  let schoolObjectId;
+
+  try {
+    const school = await School.findOne({ schoolId: schoolId });
+    if (!school) {
+      // Handle the case where the corresponding school is not found
+      // You can return an error response or handle it as needed
+    }
+    schoolObjectId = school._id; // Obtain the ObjectId of the school
+  } catch (err) {
+    const error = new HttpError("Error finding school.", 500);
+    return next(error);
+  }
+
   const createdStudent = new Student({
     studentName,
     studentEmail,
@@ -45,6 +60,8 @@ const addStudent = async (req, res, next) => {
     studentClass,
     schoolId,
     studentPassword,
+    school: schoolObjectId,
+
   });
 
   try {
@@ -65,7 +82,7 @@ const getStudentsBySchoolId = async (req, res, next) => {
     students = await Student.find({
       schoolId: schoolId,
       studentClass: studentClass,
-    });
+    }).populate("school");
   } catch (err) {
     const error = new HttpError("Couldn't find Students (Wrong School)");
     return next(error);
@@ -147,7 +164,7 @@ const getStudentById = async (req, res, next) => {
   const studentId = req.params.studentId;
   let student;
   try{
-    student = await Student.findOne({studentId: studentId})
+    student = await Student.findOne({studentId: studentId}).populate("school")
   }catch(err){
     const error = new HttpError("Something went wrong, could not find the student", 500);
     return next(error);
