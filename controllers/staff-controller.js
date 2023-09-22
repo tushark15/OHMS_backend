@@ -2,11 +2,11 @@ const Staff = require("../models/staff");
 const { validationResult } = require("express-validator");
 const HttpError = require("../models/http-error");
 const School = require("../models/school");
-
+const bcrypt = require("bcryptjs");
 const getStaff = async (req, res, next) => {
   let staffs;
   try {
-    staffs = await Staff.find({}).populate('school');
+    staffs = await Staff.find({}).populate("school");
   } catch (err) {
     const error = new HttpError("Couldn't find staff");
     return next(error);
@@ -18,7 +18,7 @@ const getStaffBySchoolId = async (req, res, next) => {
   const schoolId = req.params.schoolId;
   let staffs;
   try {
-    staffs = await Staff.find({ schoolId }).populate('school');
+    staffs = await Staff.find({ schoolId }).populate("school");
   } catch (err) {
     const error = new HttpError("Couldn't find staff (Wrong School)");
     return next(error);
@@ -57,24 +57,24 @@ const signup = async (req, res, next) => {
     return next(err);
   }
 
-  let schoolObjectId;
-
+  let hashedPassword;
   try {
-    const school = await School.findOne({ schoolId: schoolId });
-    if (!school) {
-      // Handle the case where the corresponding school is not found
-      // You can return an error response or handle it as needed
-    }
-    schoolObjectId = school._id; // Obtain the ObjectId of the school
+    hashedPassword = await bcrypt.hash(staffPassword, 12);
   } catch (err) {
-    const error = new HttpError("Error finding school.", 500);
+    const error = new HttpError(
+      "Could not create staff, please try again.",
+      500
+    );
+
     return next(error);
   }
+
+  let schoolObjectId;
 
   const createdStaffAdmin = new Staff({
     staffName: staffName,
     staffEmail: staffEmail,
-    staffPassword: staffPassword,
+    staffPassword: hashedPassword,
     staffClasses: staffClasses,
     staffSubjects: staffSubjects,
     schoolId: schoolId,
@@ -90,7 +90,7 @@ const signup = async (req, res, next) => {
   }
 
   res.json(createdStaffAdmin);
-}
+};
 
 const addStaff = async (req, res, next) => {
   const errors = validationResult(req);
@@ -121,6 +121,18 @@ const addStaff = async (req, res, next) => {
     return next(err);
   }
 
+  let hashedPassword;
+  try {
+    hashedPassword = await bcrypt.hash(staffPassword, 12);
+  } catch (err) {
+    const error = new HttpError(
+      "Could not create staff, please try again.",
+      500
+    );
+
+    return next(error);
+  }
+
   let schoolObjectId;
 
   try {
@@ -138,13 +150,12 @@ const addStaff = async (req, res, next) => {
   const createdStaff = new Staff({
     staffName: staffName,
     staffEmail: staffEmail,
-    staffPassword: staffPassword,
+    staffPassword: hashedPassword,
     staffClasses: staffClasses,
     staffSubjects: staffSubjects,
     schoolId: schoolId,
     isAdmin: isAdmin,
     school: schoolObjectId,
-
   });
 
   try {
@@ -180,7 +191,10 @@ const login = async (req, res, next) => {
 
   let isValidPassword = false;
   try {
-    isValidPassword = staffPassword === exisitingStaff.staffPassword;
+    isValidPassword = await bcrypt.compare(
+      staffPassword,
+      exisitingStaff.staffPassword
+    );
   } catch (err) {
     const error = new HttpError("logging in failed, please try again.");
     return next(error);

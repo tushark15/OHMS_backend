@@ -12,7 +12,7 @@ const staffSchema = new Schema({
   staffEmail: { type: String, required: true, unique: true },
   staffPassword: { type: String, required: true },
   schoolId: { type: Number, required: true },
-  school: { type: Schema.Types.ObjectId, ref: 'School', required: true },
+  school: { type: Schema.Types.ObjectId, ref: 'School' },
   staffClasses: [staffClassSchema],
   staffSubjects: {
     type: Map,

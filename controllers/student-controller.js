@@ -2,6 +2,7 @@ const Student = require("../models/student");
 const { validationResult } = require("express-validator");
 const HttpError = require("../models/http-error");
 const School = require("../models/school");
+const bcrypt = require("bcryptjs");
 
 const addStudent = async (req, res, next) => {
   const errors = validationResult(req);
@@ -41,12 +42,27 @@ const addStudent = async (req, res, next) => {
   try {
     const school = await School.findOne({ schoolId: schoolId });
     if (!school) {
-      // Handle the case where the corresponding school is not found
-      // You can return an error response or handle it as needed
+      const err = new HttpError(
+        "Can't find school, please try again later",
+        404
+      );
+      return next(err);
     }
-    schoolObjectId = school._id; // Obtain the ObjectId of the school
+    schoolObjectId = school._id; 
   } catch (err) {
     const error = new HttpError("Error finding school.", 500);
+    return next(error);
+  }
+
+  let hashedPassword;
+  try {
+    hashedPassword = await bcrypt.hash(studentPassword, 12);
+  } catch (err) {
+    const error = new HttpError(
+      "Could not create student, please try again.",
+      500
+    );
+
     return next(error);
   }
 
@@ -59,9 +75,8 @@ const addStudent = async (req, res, next) => {
     studentDOB,
     studentClass,
     schoolId,
-    studentPassword,
+    studentPassword: hashedPassword,
     school: schoolObjectId,
-
   });
 
   try {
@@ -114,7 +129,10 @@ const login = async (req, res, next) => {
 
   let isValidPassword = false;
   try {
-    isValidPassword = studentPassword === exisitingStudent.studentPassword;
+    isValidPassword = await bcrypt.compare(
+      studentPassword,
+      exisitingStudent.studentPassword
+    );
   } catch (err) {
     const error = new HttpError("logging in failed, please try again.");
     return next(error);
@@ -124,7 +142,7 @@ const login = async (req, res, next) => {
     const error = new HttpError("Invalid credentials, could not log you in!");
     return next(error);
   }
-
+  console.log(exisitingStudent);
   res.json({
     schoolId: exisitingStudent.schoolId,
     studentId: exisitingStudent.studentId,
@@ -163,14 +181,19 @@ const deleteStudent = async (req, res, next) => {
 const getStudentById = async (req, res, next) => {
   const studentId = req.params.studentId;
   let student;
-  try{
-    student = await Student.findOne({studentId: studentId}).populate("school")
-  }catch(err){
-    const error = new HttpError("Something went wrong, could not find the student", 500);
+  try {
+    student = await Student.findOne({ studentId: studentId }).populate(
+      "school"
+    );
+  } catch (err) {
+    const error = new HttpError(
+      "Something went wrong, could not find the student",
+      500
+    );
     return next(error);
   }
 
-  if(!student){
+  if (!student) {
     const error = new HttpError(
       "Could not find the student with provided id.",
       404
@@ -179,9 +202,9 @@ const getStudentById = async (req, res, next) => {
   }
   res.json({
     studentClass: student.studentClass,
-    schoolId: student.schoolId
-  })
-}
+    schoolId: student.schoolId,
+  });
+};
 
 exports.addStudent = addStudent;
 exports.getStudentsBySchoolId = getStudentsBySchoolId;
