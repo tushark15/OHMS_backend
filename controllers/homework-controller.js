@@ -5,6 +5,17 @@ const School = require("../models/school");
 const Staff = require("../models/staff");
 const { uploadFile } = require("../s3");
 
+const getHomework = async (req, res, next) => {
+  let homework;
+  try {
+    homework = await Homework.find({});
+  } catch (err) {
+    const error = new HttpError("Fetching homework failed, try again later.", 500);
+    return next(error);
+  }
+  res.json(homework);
+}
+
 const addHomework = async (req, res, next) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
@@ -88,4 +99,36 @@ const addHomework = async (req, res, next) => {
   res.status(201).json(createdHomework);
 };
 
+const getHomeworkBySchoolIdAndClass = async (req, res, next) => {
+  const schoolId = req.params.schoolId;
+  const schoolClass = req.params.schoolClass;
+  let homeworks;
+  try {
+    homeworks = await Homework.find({
+      schoolId: schoolId,
+      schoolClass: schoolClass,
+    });
+  } catch (err) {
+    const error = new HttpError("Fetching homework failed, try again later.", 500);
+    console.log(err)
+    return next(error);
+  }
+  res.json(homeworks);
+}
+
+const getHomeworkById = async (req, res, next) => {
+  const homeworkId = req.params.homeworkId;
+  let homework;
+  try {
+    homework = await Homework.findById(homeworkId);
+  } catch (err) {
+    const error = new HttpError("Fetching homework failed, try again later.", 500);
+    return next(error);
+  }
+  res.json(homework.homework);
+}
+
 exports.addHomework = addHomework;
+exports.getHomework = getHomework;
+exports.getHomeworkBySchoolIdAndClass = getHomeworkBySchoolIdAndClass;
+exports.getHomeworkById = getHomeworkById;

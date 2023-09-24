@@ -7,6 +7,9 @@ const upload = multer({dest: "uploads/homework"});
 
 
 router.use(checkAuth)
+router.get("/", homeworkController.getHomework);
 router.post("/", upload.single("homework"), homeworkController.addHomework);
+router.get("/download/:homeworkId", homeworkController.getHomeworkById);
+router.get("/:schoolId/:schoolClass", homeworkController.getHomeworkBySchoolIdAndClass);
 
 module.exports = router;
