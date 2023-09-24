@@ -3,18 +3,21 @@ const { validationResult } = require("express-validator");
 const HttpError = require("../models/http-error");
 const School = require("../models/school");
 const Staff = require("../models/staff");
-const { uploadFile } = require("../s3");
+const { uploadFile, getFileStream } = require("../s3");
 
 const getHomework = async (req, res, next) => {
   let homework;
   try {
     homework = await Homework.find({});
   } catch (err) {
-    const error = new HttpError("Fetching homework failed, try again later.", 500);
+    const error = new HttpError(
+      "Fetching homework failed, try again later.",
+      500
+    );
     return next(error);
   }
   res.json(homework);
-}
+};
 
 const addHomework = async (req, res, next) => {
   const errors = validationResult(req);
@@ -34,14 +37,21 @@ const addHomework = async (req, res, next) => {
     schoolId,
   } = req.body;
 
-  console.log(req.file);
+  const fileType = req.file.mimetype.split("/")[1];
+
+  let result;
 
   try {
-    const result = await uploadFile(req.file);
-    // console.log(result);
+    result = await uploadFile(req.file);
+    if (result) {
+      console.log("File uploaded successfully:", result);
+    } else {
+      console.log("File upload failed.");
+    }
   } catch (err) {
     console.log(err);
   }
+  result = result.key + "." + fileType;
 
   let schoolObjectId;
 
@@ -51,14 +61,13 @@ const addHomework = async (req, res, next) => {
       const error = new HttpError("Error finding school.", 500);
       return next(error);
     }
-    schoolObjectId = school._id; // Obtain the ObjectId of the school
+    schoolObjectId = school._id; 
   } catch (err) {
     const error = new HttpError("Error finding school.", 500);
     return next(error);
   }
 
   let staffObjectId;
-  // console.log(staffId)
 
   try {
     const staff = await Staff.findById(staffId);
@@ -78,7 +87,7 @@ const addHomework = async (req, res, next) => {
     uploadDate,
     dueDate,
     staffId: staffObjectId,
-    homework: req.file.filename,
+    homework: result,
     note,
     schoolId,
     school: schoolObjectId,
@@ -109,24 +118,50 @@ const getHomeworkBySchoolIdAndClass = async (req, res, next) => {
       schoolClass: schoolClass,
     });
   } catch (err) {
-    const error = new HttpError("Fetching homework failed, try again later.", 500);
-    console.log(err)
+    const error = new HttpError(
+      "Fetching homework failed, try again later.",
+      500
+    );
+    console.log(err);
     return next(error);
   }
   res.json(homeworks);
-}
+};
 
 const getHomeworkById = async (req, res, next) => {
   const homeworkId = req.params.homeworkId;
   let homework;
   try {
     homework = await Homework.findById(homeworkId);
+    if (!homework) {
+      const error = new HttpError("Homework not found.", 404);
+      return next(error);
+    }
+
+    const homeworkUrl = homework.homework.split(".")[0];
+    console.log(homeworkUrl);
+    
+
+    // Retrieve the file stream from S3
+    const fileStream = getFileStream(homeworkUrl);
+
+    // Set the response headers for downloading the file
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename=${homework.homework}`
+    );
+    res.setHeader("Content-Type", "application/octet-stream");
+
+    // Pipe the file stream to the response
+    fileStream.pipe(res);
   } catch (err) {
-    const error = new HttpError("Fetching homework failed, try again later.", 500);
+    const error = new HttpError(
+      "Fetching homework failed, try again later.",
+      500
+    );
     return next(error);
   }
-  res.json(homework.homework);
-}
+};
 
 exports.addHomework = addHomework;
 exports.getHomework = getHomework;
