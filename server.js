@@ -6,6 +6,7 @@ const schoolRoutes = require("./routes/school-routes")
 const staffRoutes = require("./routes/staff-routes")
 const studentRoutes = require("./routes/student-routes")
 const homeworkRoutes = require("./routes/homework-routes")
+const submissionRoutes = require("./routes/submission-routes")
 
 const app = express();
 mongoose.connect(
@@ -27,6 +28,7 @@ app.use("/api/school", schoolRoutes)
 app.use("/api/staff", staffRoutes)
 app.use("/api/student", studentRoutes)
 app.use("/api/homework", homeworkRoutes)
+app.use("/api/submission", submissionRoutes)
 
 
 app.use((error, req, res, next) => {
