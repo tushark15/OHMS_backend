@@ -3,6 +3,8 @@ const { validationResult } = require("express-validator");
 const HttpError = require("../models/http-error");
 const School = require("../models/school");
 const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken")
+
 
 const addStudent = async (req, res, next) => {
   const errors = validationResult(req);
@@ -48,7 +50,7 @@ const addStudent = async (req, res, next) => {
       );
       return next(err);
     }
-    schoolObjectId = school._id; 
+    schoolObjectId = school._id;
   } catch (err) {
     const error = new HttpError("Error finding school.", 500);
     return next(error);
@@ -142,11 +144,20 @@ const login = async (req, res, next) => {
     const error = new HttpError("Invalid credentials, could not log you in!");
     return next(error);
   }
-  console.log(exisitingStudent);
+  let token;
+  try {
+    token = jwt.sign({ userId: exisitingStudent._id }, process.env.JWT_KEY, {
+      expiresIn: "1h",
+    });
+  } catch (err) {
+    const error = new HttpError("Logging in failed, please try again.", 500);
+    return next(error);
+  }
   res.json({
     schoolId: exisitingStudent.schoolId,
     studentId: exisitingStudent.studentId,
     studentClass: exisitingStudent.studentClass,
+    token: token
   });
 };
 

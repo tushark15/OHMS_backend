@@ -1,8 +1,10 @@
+require("dotenv").config();
 const Staff = require("../models/staff");
 const { validationResult } = require("express-validator");
 const HttpError = require("../models/http-error");
 const School = require("../models/school");
 const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken")
 const getStaff = async (req, res, next) => {
   let staffs;
   try {
@@ -89,7 +91,17 @@ const signup = async (req, res, next) => {
     return next(error);
   }
 
-  res.json(createdStaffAdmin);
+  let token;
+  try {
+    token = jwt.sign({ userId: createdStaffAdmin._id }, process.env.JWT_KEY, {
+      expiresIn: "1h",
+    });
+  } catch (err) {
+    const error = new HttpError("Signing up failed, please try again.", 500);
+    return next(error);
+  }
+
+  res.json({ createdStaffAdmin, token: token });
 };
 
 const addStaff = async (req, res, next) => {
@@ -204,8 +216,18 @@ const login = async (req, res, next) => {
     const error = new HttpError("Invalid credentials, could not log you in!");
     return next(error);
   }
+  let token;
+  try {
+    token = jwt.sign({ userId: exisitingStaff._id }, process.env.JWT_KEY, {
+      expiresIn: "1h",
+    });
+  } catch (err) {
+    console.log(err)
+    const error = new HttpError("Logging in failed, please try again.", 500);
+    return next(error);
+  }
 
-  res.json(exisitingStaff);
+  res.json({ exisitingStaff, token: token });
 };
 
 const deleteStaff = async (req, res, next) => {
