@@ -4,6 +4,7 @@ const HttpError = require("../models/http-error");
 const School = require("../models/school");
 const Student = require("../models/student");
 const { uploadFile } = require("../s3");
+const Homework = require("../models/homework");
 
 const getSubmission = async (req, res, next) => {
   let submission;
@@ -27,17 +28,31 @@ const addSubmission = async (req, res, next) => {
     );
   }
 
-  const { schoolClass, classSubject, uploadDate, studentId, note, schoolId } =
-    req.body;
+  const {
+    schoolClass,
+    classSubject,
+    uploadDate,
+    studentId,
+    note,
+    schoolId,
+    homeworkId,
+  } = req.body;
 
-  console.log(req.file);
+  const fileType = req.file.mimetype.split("/")[1];
+
+  let result;
 
   try {
-    const result = await uploadFile(req.file);
-    // console.log(result);
+    result = await uploadFile(req.file);
+    if (result) {
+      console.log("File uploaded successfully:", result);
+    } else {
+      console.log("File upload failed.");
+    }
   } catch (err) {
     console.log(err);
   }
+  result = result.key + "." + fileType;
 
   try {
     const school = await School.findOne({ schoolId: schoolId });
@@ -45,7 +60,7 @@ const addSubmission = async (req, res, next) => {
       const error = new HttpError("Error finding school.", 500);
       return next(error);
     }
-    schoolObjectId = school._id; // Obtain the ObjectId of the school
+    schoolObjectId = school._id;
   } catch (err) {
     const error = new HttpError("Error finding school.", 500);
     return next(error);
@@ -53,7 +68,7 @@ const addSubmission = async (req, res, next) => {
 
   let studentObjectId;
   try {
-    const student = await Student.findById({ studentId: studentId });
+    const student = await Student.findOne({ studentId: studentId });
     if (!student) {
       const error = new HttpError("Error finding student.", 500);
       return next(error);
@@ -64,16 +79,31 @@ const addSubmission = async (req, res, next) => {
     return next(error);
   }
 
+  let homeworkObjectId;
+  try {
+    const homework = await Homework.findById(homeworkId);
+    if (!homework) {
+      const error = new HttpError("Error finding homework.", 500);
+      return next(error);
+    }
+    homeworkObjectId = homework._id;
+  } catch (err) {
+    const error = new HttpError("Error finding homework.", 500);
+    console.log(err);
+    return next(error);
+  }
+
   const createdSubmission = new Submission({
     schoolClass,
     classSubject,
     uploadDate,
     studentId,
-    submission: req.file.filename,
+    submission: result,
     note,
     schoolId,
     school: schoolObjectId,
     student: studentObjectId,
+    homework: homeworkObjectId,
   });
 
   try {
@@ -83,6 +113,8 @@ const addSubmission = async (req, res, next) => {
       "Creating submission failed, please try again.",
       500
     );
+    console.log(err);
+
     return next(error);
   }
 
