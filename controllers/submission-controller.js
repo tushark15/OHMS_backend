@@ -3,7 +3,7 @@ const { validationResult } = require("express-validator");
 const HttpError = require("../models/http-error");
 const School = require("../models/school");
 const Student = require("../models/student");
-const { uploadFile } = require("../s3");
+const { uploadFile, getFileStream } = require("../s3");
 const Homework = require("../models/homework");
 
 const getSubmission = async (req, res, next) => {
@@ -121,5 +121,54 @@ const addSubmission = async (req, res, next) => {
   res.status(201).json({ submission: createdSubmission });
 };
 
+const getSubmissionByStudentId = async (req, res, next) => {
+  const studentId = req.params.studentId;
+  let submissions;
+  try {
+    submissions = await Submission.find({ studentId: studentId });
+  } catch (err) {
+    const error = new HttpError(
+      "Fetching submission failed, try again later.",
+      500
+    );
+    console.log(err);
+    return next(error);
+  }
+  res.json(submissions);
+};
+
+const getSubmissionById = async (req, res, next) => {
+  const submissionId = req.params.submissionId;
+  let submission;
+  try {
+    submission = await Submission.findById(submissionId);
+    if (!submission) {
+      const error = new HttpError("Submission not found.", 404);
+      return next(error);
+    }
+    const submissionURL = submission.submission.split(".")[0];
+    console.log(submissionURL);
+    const fileStream = getFileStream(submissionURL);
+
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename=${submission.submission}`
+    );
+    res.setHeader("Content-Type", "application/octet-stream");
+    fileStream.pipe(res);
+    
+  } catch (err) {
+    const error = new HttpError(
+      "Fetching submission failed, try again later.",
+      500
+    );
+    console.log(err);
+    return next(error);
+  }
+};
+
+
 exports.getSubmission = getSubmission;
 exports.addSubmission = addSubmission;
+exports.getSubmissionByStudentId = getSubmissionByStudentId;
+exports.getSubmissionById = getSubmissionById;
