@@ -10,7 +10,7 @@ const submissionRoutes = require("./routes/submission-routes")
 
 const app = express();
 mongoose.connect(
-  `mongodb+srv://${process.env.MONGO_USERNAME}:${process.env.MONGO_PASSWORD}@cluster.ix4viru.mongodb.net/`,
+  `mongodb+srv://${process.env.MONGO_USERNAME}:${process.env.MONGO_PASSWORD}@cluster.ix4viru.mongodb.net/${process.env.MONGO_DB_NAME}`,
   {
     useNewUrlParser: true,
     useUnifiedTopology: true,
