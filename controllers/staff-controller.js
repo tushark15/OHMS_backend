@@ -96,6 +96,7 @@ const signup = async (req, res, next) => {
     token = jwt.sign({ userId: createdStaffAdmin._id }, process.env.JWT_KEY, {
       expiresIn: "1h",
     });
+    console.log(token)
   } catch (err) {
     const error = new HttpError("Signing up failed, please try again.", 500);
     return next(error);
