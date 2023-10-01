@@ -50,7 +50,6 @@ const addSubmission = async (req, res, next) => {
       console.log("File upload failed.");
     }
   } catch (err) {
-    console.log(err);
   }
   result = result.key + "." + fileType;
 
@@ -89,7 +88,6 @@ const addSubmission = async (req, res, next) => {
     homeworkObjectId = homework._id;
   } catch (err) {
     const error = new HttpError("Error finding homework.", 500);
-    console.log(err);
     return next(error);
   }
 
@@ -113,7 +111,6 @@ const addSubmission = async (req, res, next) => {
       "Creating submission failed, please try again.",
       500
     );
-    console.log(err);
 
     return next(error);
   }
@@ -131,7 +128,6 @@ const getSubmissionByStudentId = async (req, res, next) => {
       "Fetching submission failed, try again later.",
       500
     );
-    console.log(err);
     return next(error);
   }
   res.json(submissions);
@@ -147,7 +143,6 @@ const getSubmissionById = async (req, res, next) => {
       return next(error);
     }
     const submissionURL = submission.submission.split(".")[0];
-    console.log(submissionURL);
     const fileStream = getFileStream(submissionURL);
 
     res.setHeader(
@@ -162,7 +157,6 @@ const getSubmissionById = async (req, res, next) => {
       "Fetching submission failed, try again later.",
       500
     );
-    console.log(err);
     return next(error);
   }
 };

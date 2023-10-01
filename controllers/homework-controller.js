@@ -49,7 +49,8 @@ const addHomework = async (req, res, next) => {
       console.log("File upload failed.");
     }
   } catch (err) {
-    console.log(err);
+    const error = new HttpError("Error uploading file.", 500);
+    return next(error);
   }
   result = result.key + "." + fileType;
 
@@ -122,7 +123,6 @@ const getHomeworkBySchoolIdAndClass = async (req, res, next) => {
       "Fetching homework failed, try again later.",
       500
     );
-    console.log(err);
     return next(error);
   }
   res.json(homeworks);
@@ -139,9 +139,7 @@ const getHomeworkById = async (req, res, next) => {
     }
 
     const homeworkUrl = homework.homework.split(".")[0];
-    console.log(homeworkUrl);
     
-
     // Retrieve the file stream from S3
     const fileStream = getFileStream(homeworkUrl);
 
