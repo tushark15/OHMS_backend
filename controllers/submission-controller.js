@@ -40,6 +40,16 @@ const addSubmission = async (req, res, next) => {
 
   const fileType = req.file.mimetype.split("/")[1];
 
+  const fileSize = req.file.size; 
+
+  const maxFileSizeBytes = 5 * 1024 * 1024; // 2MB in bytes
+
+  if (fileSize > maxFileSizeBytes) {
+    return next(
+      new HttpError("File size exceeds the maximum allowed size.", 422)
+    );
+  }
+
   let result;
 
   try {

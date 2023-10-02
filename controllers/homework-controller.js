@@ -39,6 +39,16 @@ const addHomework = async (req, res, next) => {
 
   const fileType = req.file.mimetype.split("/")[1];
 
+  const fileSize = req.file.size; 
+
+  const maxFileSizeBytes = 5 * 1024 * 1024; // 2MB in bytes
+
+  if (fileSize > maxFileSizeBytes) {
+    return next(
+      new HttpError("File size exceeds the maximum allowed size.", 422)
+    );
+  }
+
   let result;
 
   try {
@@ -62,7 +72,7 @@ const addHomework = async (req, res, next) => {
       const error = new HttpError("Error finding school.", 500);
       return next(error);
     }
-    schoolObjectId = school._id; 
+    schoolObjectId = school._id;
   } catch (err) {
     const error = new HttpError("Error finding school.", 500);
     return next(error);
@@ -139,7 +149,7 @@ const getHomeworkById = async (req, res, next) => {
     }
 
     const homeworkUrl = homework.homework.split(".")[0];
-    
+
     // Retrieve the file stream from S3
     const fileStream = getFileStream(homeworkUrl);
 
