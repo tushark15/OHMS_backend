@@ -18,6 +18,7 @@ const s3 = new aws.S3({
   apiVersion: "latest",
 });
 
+
 async function checkBucketSize() {
   try {
     const response = await s3.listObjectsV2({ Bucket: bucketName }).promise();
@@ -31,7 +32,6 @@ async function checkBucketSize() {
     throw err;
   }
 }
-
 //upload a file to s3
 async function uploadFile(file) {
   //check if bucket is full
