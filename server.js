@@ -2,6 +2,7 @@ require('dotenv').config();
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
+const limiter = require("./middleware/rate-limit");
 const schoolRoutes = require("./routes/school-routes")
 const staffRoutes = require("./routes/staff-routes")
 const studentRoutes = require("./routes/student-routes")
@@ -21,6 +22,7 @@ db.on("error", (err) => console.log(err));
 db.once("open", () => console.log("Connected to MongoDB"));
 
 app.use(cors())
+app.use(limiter);
 app.use(express.json());
 
 
